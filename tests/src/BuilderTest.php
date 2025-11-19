@@ -49,7 +49,7 @@ class BuilderTest extends TestCase
             ],
             [
                 '~(?:foo)~',
-                ['foo', false],
+                ['foo', 'capturing' => false],
             ],
         ];
     }
@@ -57,13 +57,13 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesSubpatterns')]
     public function testAddsubpattern(
-        string $expected,
+        string $expectedRegExp,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->addSubpattern(...$methodArgs);
 
-        $this->assertSame($expected, $builder->toString());
+        $this->assertSame($expectedRegExp, $builder->toString());
         $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
@@ -187,7 +187,7 @@ class BuilderTest extends TestCase
             ],
             [
                 '~\b(foo)\b~',
-                ['foo', true],
+                ['foo', 'captureWord' => true],
             ],
         ];
     }
@@ -195,13 +195,13 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesWholeWordPatterns')]
     public function testAddwholeword(
-        string $expected,
+        string $expectedRegExp,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->addWholeWord(...$methodArgs);
 
-        $this->assertSame($expected, $builder->toString());
+        $this->assertSame($expectedRegExp, $builder->toString());
         $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
@@ -212,5 +212,57 @@ class BuilderTest extends TestCase
 
         $this->assertSame('\\\\', $builder->backslash());
         $this->assertSame($builder->backslash(), $builder->slosh());
+    }
+
+    /** @return array<mixed[]> */
+    public static function providesChunks(): array
+    {
+        return [
+            [
+                '~~',
+                [''],
+            ],
+            [
+                '~foo~',
+                ['foo'],
+            ],
+        ];
+    }
+
+    /** @param string[] $methodArgs */
+    #[DataProvider('providesChunks')]
+    public function testAddAddsAnyKindOfChunk(
+        string $expectedRegExp,
+        array $methodArgs,
+    ): void {
+        $builder = new Builder();
+        $something = $builder->add(...$methodArgs);
+
+        $this->assertSame($expectedRegExp, $builder->toString());
+        $this->assertSame($builder->toString(), (string) $builder);
+        $this->assertSame($builder, $something);
+    }
+
+    public function testAddQuotesTheString(): void
+    {
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['quote'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('quote')
+            ->willReturn('foo\.bar')
+        ;
+
+        /** @var Builder $builderMock */
+
+        $something = $builderMock->add('foo.bar', quote: true);
+
+        $this->assertSame('~foo\.bar~', $builderMock->toString());
+        $this->assertSame($builderMock->toString(), (string) $builderMock);
+        $this->assertSame($builderMock, $something);
     }
 }

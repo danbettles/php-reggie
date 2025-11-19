@@ -28,10 +28,10 @@ class Builder
     private array $chunks;
 
     private static function wrapString(
-        string $string,
+        string $str,
         string $wrapString,
     ): string {
-        return $wrapString . $string . $wrapString;
+        return $wrapString . $str . $wrapString;
     }
 
     public function __construct()
@@ -44,14 +44,23 @@ class Builder
         $this->chunks = [];
     }
 
+    /**
+     * Builds, and returns, the regular-expression string
+     */
     public function toString(): string
     {
-        return self::wrapString(
-            implode($this->chunks),
-            $this->options['delimiter'],
-        ) . $this->options['flags'];
+        return (
+            self::wrapString(
+                implode($this->chunks),
+                $this->options['delimiter'],
+            )
+            . $this->options['flags']
+        );
     }
 
+    /**
+     * @see self::toString()
+     */
     public function __toString(): string
     {
         return $this->toString();
@@ -78,7 +87,7 @@ class Builder
     }
 
     /**
-     * Quite simply because literal backslashes in regular-expression strings are hideous
+     * Because literal backslashes in regular-expression strings are hideous
      */
     public function backslash(): string
     {
@@ -109,6 +118,22 @@ class Builder
         return implode('|', $patterns);
     }
 
+    /**
+     * Adds a chunk -- anything -- to the pattern being built
+     */
+    public function add(
+        string $str,
+        bool $quote = false,
+    ): self {
+        if ($quote) {
+            $str = $this->quote($str);
+        }
+
+        $this->chunks[] = $str;
+
+        return $this;
+    }
+
     private function createSubpattern(
         string $pattern,
         bool $capturing,
@@ -125,9 +150,7 @@ class Builder
         string $pattern,
         bool $capturing = true,
     ): self {
-        $this->chunks[] = $this->createSubpattern($pattern, $capturing);
-
-        return $this;
+        return $this->add($this->createSubpattern($pattern, $capturing));
     }
 
     /**
@@ -141,8 +164,6 @@ class Builder
             $pattern = $this->createSubpattern($pattern, capturing: true);
         }
 
-        $this->chunks[] = self::wrapString($pattern, '\b');
-
-        return $this;
+        return $this->add(self::wrapString($pattern, '\b'));
     }
 }
