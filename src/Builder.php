@@ -32,9 +32,9 @@ class Builder
 
     private static function wrapString(
         string $str,
-        string $wrapString,
+        string $wrapStr,
     ): string {
-        return $wrapString . $str . $wrapString;
+        return $wrapStr . $str . $wrapStr;
     }
 
     public function __construct()
