@@ -3,6 +3,7 @@
 namespace DanBettles\Reggie;
 
 use function array_map;
+use function array_unshift;
 use function implode;
 use function preg_quote;
 
@@ -13,6 +14,8 @@ use const true;
  * @phpstan-type OptionsArray array{
  *   delimiter: string,
  *   flags: string,
+ *   "anchorLeft": bool,
+ *   "anchorRight": bool,
  * }
  */
 class Builder
@@ -39,19 +42,31 @@ class Builder
         $this->options = [
             'delimiter' => '~',
             'flags' => '',
+            'anchorLeft' => false,
+            'anchorRight' => false,
         ];
 
         $this->chunks = [];
     }
 
     /**
-     * Builds, and returns, the regular-expression string
+     * Builds, and returns, the regex string
      */
     public function toString(): string
     {
+        $chunks = $this->chunks;
+
+        if ($this->options['anchorLeft']) {
+            array_unshift($chunks, '^');
+        }
+
+        if ($this->options['anchorRight']) {
+            $chunks[] = '$';
+        }
+
         return (
             self::wrapString(
-                implode($this->chunks),
+                implode($chunks),
                 $this->options['delimiter'],
             )
             . $this->options['flags']
@@ -79,7 +94,38 @@ class Builder
     }
 
     /**
-     * Quotes special regular-expression characters
+     * Shortcut, causes the regex to be 'anchored' on the left side (e.g. "~^Start~")
+     */
+    public function anchorLeft(bool $flag = true): self
+    {
+        $this->options['anchorLeft'] = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Shortcut, causes the regex to be 'anchored' on the right side (e.g. "~End$~")
+     */
+    public function anchorRight(bool $flag = true): self
+    {
+        $this->options['anchorRight'] = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Shortcut, causes the regex to be 'anchored' on both sides (e.g. "~^Both$~")
+     */
+    public function anchorBoth(bool $flag = true): self
+    {
+        return $this
+            ->anchorLeft($flag)
+            ->anchorRight($flag)
+        ;
+    }
+
+    /**
+     * Quotes special regex characters
      */
     public function quote(string $str): string
     {
@@ -87,7 +133,7 @@ class Builder
     }
 
     /**
-     * Because literal backslashes in regular-expression strings are hideous
+     * Because literal backslashes in regex strings are bewildering
      */
     public function backslash(): string
     {
@@ -118,6 +164,15 @@ class Builder
         return implode('|', $patterns);
     }
 
+    private function createSubpattern(
+        string $pattern,
+        bool $capturing,
+    ): string {
+        $pattern = ($capturing ? '' : '?:') . $pattern;
+
+        return "({$pattern})";
+    }
+
     /**
      * Adds a chunk -- anything -- to the pattern being built
      */
@@ -132,15 +187,6 @@ class Builder
         $this->chunks[] = $str;
 
         return $this;
-    }
-
-    private function createSubpattern(
-        string $pattern,
-        bool $capturing,
-    ): string {
-        $pattern = ($capturing ? '' : '?:') . $pattern;
-
-        return "({$pattern})";
     }
 
     /**

@@ -14,7 +14,7 @@ use const true;
 class BuilderTest extends TestCase
 {
     /** @return array<mixed[]> */
-    public static function providesRegularExpressionStrings(): array
+    public static function providesRegexStrings(): array
     {
         return [
             [
@@ -30,8 +30,8 @@ class BuilderTest extends TestCase
         ];
     }
 
-    #[DataProvider('providesRegularExpressionStrings')]
-    public function testTostringReturnsARegularExpressionString(
+    #[DataProvider('providesRegexStrings')]
+    public function testTostringReturnsARegexString(
         string $expected,
         Builder $builder,
     ): void {
@@ -57,13 +57,13 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesSubpatterns')]
     public function testAddsubpattern(
-        string $expectedRegExp,
+        string $expectedRegex,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->addSubpattern(...$methodArgs);
 
-        $this->assertSame($expectedRegExp, $builder->toString());
+        $this->assertSame($expectedRegex, $builder->toString());
         $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
@@ -195,13 +195,13 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesWholeWordPatterns')]
     public function testAddwholeword(
-        string $expectedRegExp,
+        string $expectedRegex,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->addWholeWord(...$methodArgs);
 
-        $this->assertSame($expectedRegExp, $builder->toString());
+        $this->assertSame($expectedRegex, $builder->toString());
         $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
@@ -232,13 +232,13 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesChunks')]
     public function testAddAddsAnyKindOfChunk(
-        string $expectedRegExp,
+        string $expectedRegex,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->add(...$methodArgs);
 
-        $this->assertSame($expectedRegExp, $builder->toString());
+        $this->assertSame($expectedRegex, $builder->toString());
         $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
@@ -264,5 +264,50 @@ class BuilderTest extends TestCase
         $this->assertSame('~foo\.bar~', $builderMock->toString());
         $this->assertSame($builderMock->toString(), (string) $builderMock);
         $this->assertSame($builderMock, $something);
+    }
+
+    public function testAnchorleftCausesTheRegexToBeAnchoredOnTheLeftSide(): void
+    {
+        $builder = new Builder();
+        $builder->add('foo');
+        $something = $builder->anchorLeft();
+
+        $this->assertSame('~^foo~', $builder->toString());
+        $this->assertSame($builder->toString(), (string) $builder);
+        $this->assertSame($builder, $something);
+
+        $builder->anchorLeft(false);
+
+        $this->assertSame('~foo~', $builder->toString());
+    }
+
+    public function testAnchorrightCausesTheRegexToBeAnchoredOnTheRightSide(): void
+    {
+        $builder = new Builder();
+        $builder->add('foo');
+        $something = $builder->anchorRight();
+
+        $this->assertSame('~foo$~', $builder->toString());
+        $this->assertSame($builder->toString(), (string) $builder);
+        $this->assertSame($builder, $something);
+
+        $builder->anchorRight(false);
+
+        $this->assertSame('~foo~', $builder->toString());
+    }
+
+    public function testAnchorbothCausesTheRegexToBeAnchoredOnBothSides(): void
+    {
+        $builder = new Builder();
+        $builder->add('foo');
+        $something = $builder->anchorBoth();
+
+        $this->assertSame('~^foo$~', $builder->toString());
+        $this->assertSame($builder->toString(), (string) $builder);
+        $this->assertSame($builder, $something);
+
+        $builder->anchorBoth(false);
+
+        $this->assertSame('~foo~', $builder->toString());
     }
 }
