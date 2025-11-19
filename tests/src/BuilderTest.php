@@ -17,14 +17,35 @@ class BuilderTest extends TestCase
     public static function providesRegexStrings(): array
     {
         return [
-            [
+            'Empty pattern' => [
                 '~~',
                 new Builder(),
             ],
-            [
+            'Empty pattern with flags' => [
                 '~~ism',
                 (new Builder())
                     ->setFlags('ism')
+                ,
+            ],
+            'Paths to exclude' => [
+                '~^/path/to/symfony/project/(vendor|var|node_modules)/~',
+                (function (): Builder {
+                    $builder = new Builder();
+
+                    return $builder
+                        ->anchorLeft()
+                        ->addLiteral("/path/to/symfony/project/")
+                        ->addSubpattern($builder->listOfAlternatives(['vendor', 'var', 'node_modules'], quoteEach: true))
+                        ->addLiteral('/')
+                    ;
+                })(),
+            ],
+            'Paths to include' => [
+                '~\.php$~i',
+                (new Builder())
+                    ->setFlags('i')
+                    ->anchorRight()
+                    ->addLiteral('.php')
                 ,
             ],
         ];
