@@ -94,7 +94,7 @@ class Builder
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' on the left side (e.g. "~^Start~")
+     * Shortcut, causes the regex to be 'anchored' on the left side (e.g.: "~^Left~")
      */
     public function anchorLeft(bool $flag = true): self
     {
@@ -104,7 +104,7 @@ class Builder
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' on the right side (e.g. "~End$~")
+     * Shortcut, causes the regex to be 'anchored' on the right side (e.g.: "~Right$~")
      */
     public function anchorRight(bool $flag = true): self
     {
@@ -114,7 +114,7 @@ class Builder
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' on both sides (e.g. "~^Both$~")
+     * Shortcut, causes the regex to be 'anchored' on both sides (e.g.: "~^Both$~")
      */
     public function anchorBoth(bool $flag = true): self
     {
@@ -214,7 +214,7 @@ class Builder
     }
 
     /**
-     * Adds a literal to the pattern being built.  The string will be quoted.
+     * Adds a literal to the pattern being built.  (The string will be quoted.)
      */
     public function addLiteral(string $str): self
     {
