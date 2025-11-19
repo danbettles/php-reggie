@@ -14,8 +14,8 @@ use const true;
  * @phpstan-type OptionsArray array{
  *   delimiter: string,
  *   flags: string,
- *   "anchorLeft": bool,
- *   "anchorRight": bool,
+ *   anchorLeft: bool,
+ *   anchorRight: bool,
  * }
  */
 class Builder
