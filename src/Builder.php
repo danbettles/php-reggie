@@ -212,4 +212,12 @@ class Builder
 
         return $this->add(self::wrapString($pattern, '\b'));
     }
+
+    /**
+     * Adds a literal to the pattern being built.  The string will be quoted.
+     */
+    public function addLiteral(string $str): self
+    {
+        return $this->add($str, quote: true);
+    }
 }

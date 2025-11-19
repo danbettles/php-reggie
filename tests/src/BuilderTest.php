@@ -110,9 +110,18 @@ class BuilderTest extends TestCase
             ->getMock()
         ;
 
+        $matcher = $this->exactly(2);
+
         $builderMock
-            ->expects($this->exactly(2))
+            ->expects($matcher)
             ->method('quote')
+            ->willReturnCallback(function (string $key, string $value) use ($matcher): void {
+                match ($matcher->numberOfInvocations()) {
+                    1 => $this->assertEquals('foo.bar', $value),
+                    2 => $this->assertEquals('baz.qux', $value),
+                    default => $this->fail(),
+                };
+            })
             ->willReturnOnConsecutiveCalls('foo\.bar', 'baz\.qux')
         ;
 
@@ -254,6 +263,7 @@ class BuilderTest extends TestCase
         $builderMock
             ->expects($this->once())
             ->method('quote')
+            ->with('foo.bar')
             ->willReturn('foo\.bar')
         ;
 
@@ -309,5 +319,29 @@ class BuilderTest extends TestCase
         $builder->anchorBoth(false);
 
         $this->assertSame('~foo~', $builder->toString());
+    }
+
+    public function testAddliteral(): void
+    {
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['quote'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('quote')
+            ->with('{{ value }}')
+            ->willReturn('\{\{ value \}\}')
+        ;
+
+        /** @var Builder $builderMock */
+
+        $something = $builderMock->addLiteral('{{ value }}');
+
+        $this->assertSame('~\{\{ value \}\}~', $builderMock->toString());
+        $this->assertSame($builderMock->toString(), (string) $builderMock);
+        $this->assertSame($builderMock, $something);
     }
 }
