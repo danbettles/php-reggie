@@ -43,7 +43,7 @@ class BuilderTest extends TestCase
             'Paths to include' => [
                 '~\.php$~i',
                 (new Builder())
-                    ->setFlags('i')
+                    ->caseInsensitive()
                     ->anchorRight()
                     ->addLiteral('.php')
                 ,
@@ -57,7 +57,25 @@ class BuilderTest extends TestCase
         Builder $builder,
     ): void {
         $this->assertSame($expected, $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
+    }
+
+    public function testMagicTostringSimplyCallsTostring(): void
+    {
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['toString'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('toString')
+            ->willReturn('~foo~')
+        ;
+
+        /** @var Builder $builderMock */
+
+        $this->assertSame('~foo~', (string) $builderMock);
     }
 
     /** @return array<mixed[]> */
@@ -85,7 +103,6 @@ class BuilderTest extends TestCase
         $something = $builder->addSubpattern(...$methodArgs);
 
         $this->assertSame($expectedRegex, $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
 
@@ -199,12 +216,15 @@ class BuilderTest extends TestCase
         $something = $builder->setFlags('i');
         $this->assertSame('i', $builder->getFlags());
         $this->assertSame($builder, $something);
+        $this->assertSame('~~i', $builder->toString());
 
         $builder->setFlags('s');
         $this->assertSame('s', $builder->getFlags());
+        $this->assertSame('~~s', $builder->toString());
 
         $builder->setFlags('');
         $this->assertSame('', $builder->getFlags());
+        $this->assertSame('~~', $builder->toString());
     }
 
     /** @return array<mixed[]> */
@@ -232,7 +252,6 @@ class BuilderTest extends TestCase
         $something = $builder->addWholeWord(...$methodArgs);
 
         $this->assertSame($expectedRegex, $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
 
@@ -269,7 +288,6 @@ class BuilderTest extends TestCase
         $something = $builder->add(...$methodArgs);
 
         $this->assertSame($expectedRegex, $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
     }
 
@@ -293,7 +311,6 @@ class BuilderTest extends TestCase
         $something = $builderMock->add('foo.bar', quote: true);
 
         $this->assertSame('~foo\.bar~', $builderMock->toString());
-        $this->assertSame($builderMock->toString(), (string) $builderMock);
         $this->assertSame($builderMock, $something);
     }
 
@@ -304,7 +321,6 @@ class BuilderTest extends TestCase
         $something = $builder->anchorLeft();
 
         $this->assertSame('~^foo~', $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
 
         $builder->anchorLeft(false);
@@ -319,7 +335,6 @@ class BuilderTest extends TestCase
         $something = $builder->anchorRight();
 
         $this->assertSame('~foo$~', $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
 
         $builder->anchorRight(false);
@@ -334,7 +349,6 @@ class BuilderTest extends TestCase
         $something = $builder->anchorBoth();
 
         $this->assertSame('~^foo$~', $builder->toString());
-        $this->assertSame($builder->toString(), (string) $builder);
         $this->assertSame($builder, $something);
 
         $builder->anchorBoth(false);
@@ -362,7 +376,182 @@ class BuilderTest extends TestCase
         $something = $builderMock->addLiteral('{{ value }}');
 
         $this->assertSame('~\{\{ value \}\}~', $builderMock->toString());
-        $this->assertSame($builderMock->toString(), (string) $builderMock);
         $this->assertSame($builderMock, $something);
+    }
+
+    /** @return array<mixed[]> */
+    public static function providesCasesensitiveFlags(): array
+    {
+        return [
+            // Starting sensitive:
+            [
+                '',
+                'initialFlags' => '',
+                'methodArgs' => [],
+            ],
+            [
+                '',
+                'initialFlags' => '',
+                'methodArgs' => [true],
+            ],
+            [
+                'i',
+                'initialFlags' => '',
+                'methodArgs' => [false],
+            ],
+            // Starting insensitive:
+            [
+                '',
+                'initialFlags' => 'i',
+                'methodArgs' => [],
+            ],
+            [
+                '',
+                'initialFlags' => 'i',
+                'methodArgs' => [true],
+            ],
+            [
+                'i',
+                'initialFlags' => 'i',
+                'methodArgs' => [false],
+            ],
+            // Starting sensitive with others:
+            [
+                'sm',
+                'initialFlags' => 'sm',
+                'methodArgs' => [],
+            ],
+            [
+                'sm',
+                'initialFlags' => 'sm',
+                'methodArgs' => [true],
+            ],
+            [
+                'smi',
+                'initialFlags' => 'sm',
+                'methodArgs' => [false],
+            ],
+            // Starting insensitive with others:
+            [
+                'sm',
+                'initialFlags' => 'sim',
+                'methodArgs' => [],
+            ],
+            [
+                'sm',
+                'initialFlags' => 'sim',
+                'methodArgs' => [true],
+            ],
+            [
+                'sim',
+                'initialFlags' => 'sim',
+                'methodArgs' => [false],
+            ],
+        ];
+    }
+
+    /** @param array{0?:bool} $methodArgs */
+    #[DataProvider('providesCasesensitiveFlags')]
+    public function testCasesensitive(
+        string $expected,
+        string $initialFlags,
+        array $methodArgs,
+    ): void {
+        $builder = (new Builder())
+            ->setFlags($initialFlags)
+        ;
+
+        $something = $builder->caseSensitive(...$methodArgs);
+
+        $this->assertSame($expected, $builder->getFlags());
+        $this->assertSame($builder, $something);
+    }
+
+    /** @return array<mixed[]> */
+    public static function providesCaseinsensitiveFlags(): array
+    {
+        return [
+            // Starting sensitive:
+            [
+                'i',
+                'initialFlags' => '',
+                'methodArgs' => [],
+            ],
+            [
+                'i',
+                'initialFlags' => '',
+                'methodArgs' => [true],
+            ],
+            [
+                '',
+                'initialFlags' => '',
+                'methodArgs' => [false],
+            ],
+            // Starting insensitive:
+            [
+                'i',
+                'initialFlags' => 'i',
+                'methodArgs' => [],
+            ],
+            [
+                'i',
+                'initialFlags' => 'i',
+                'methodArgs' => [true],
+            ],
+            [
+                '',
+                'initialFlags' => 'i',
+                'methodArgs' => [false],
+            ],
+            // Starting sensitive with others:
+            [
+                'smi',
+                'initialFlags' => 'sm',
+                'methodArgs' => [],
+            ],
+            [
+                'smi',
+                'initialFlags' => 'sm',
+                'methodArgs' => [true],
+            ],
+            [
+                'sm',
+                'initialFlags' => 'sm',
+                'methodArgs' => [false],
+            ],
+            // Starting insensitive with others:
+            [
+                'sim',
+                'initialFlags' => 'sim',
+                'methodArgs' => [],
+            ],
+            [
+                'sim',
+                'initialFlags' => 'sim',
+                'methodArgs' => [true],
+            ],
+            [
+                'sm',
+                'initialFlags' => 'sim',
+                'methodArgs' => [false],
+            ],
+        ];
+    }
+
+    /** @param array{0?:bool} $methodArgs */
+    #[DataProvider('providesCaseinsensitiveFlags')]
+    public function testCaseinsensitive(
+        string $expected,
+        string $initialFlags,
+        array $methodArgs,
+    ): void {
+        $builder = (new Builder())
+            ->setFlags($initialFlags)
+        ;
+
+        $something = $builder->caseInsensitive(...$methodArgs);
+
+        $this->assertSame($expected, $builder->getFlags());
+        $this->assertSame($builder, $something);
     }
 }

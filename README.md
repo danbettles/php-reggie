@@ -15,7 +15,7 @@ A few examples adapted from real-world code.
 
 ```php
 $regex = (new Builder())
-    ->setFlags('i')
+    ->caseInsensitive()
     ->anchorRight()
     ->addLiteral('.php')
     ->toString()

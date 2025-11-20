@@ -6,6 +6,8 @@ use function array_map;
 use function array_unshift;
 use function implode;
 use function preg_quote;
+use function str_contains;
+use function str_replace;
 
 use const false;
 use const true;
@@ -20,6 +22,8 @@ use const true;
  */
 class Builder
 {
+    private const string FLAG_CASELESS = 'i';
+
     /**
      * @phpstan-var OptionsArray
      */
@@ -91,6 +95,26 @@ class Builder
     public function getFlags(): string
     {
         return $this->options['flags'];
+    }
+
+    public function caseSensitive(bool $flag = true): self
+    {
+        if ($flag) {
+            // Make case-sensitive:
+            return $this->setFlags(str_replace(self::FLAG_CASELESS, '', $this->getFlags()));
+        }
+
+        // Make case-*in*sensitive:
+
+        return str_contains($this->getFlags(), self::FLAG_CASELESS)
+            ? $this  // (Already case-insensitive)
+            : $this->setFlags($this->getFlags() . self::FLAG_CASELESS)
+        ;
+    }
+
+    public function caseInsensitive(bool $flag = true): self
+    {
+        return $this->caseSensitive(!$flag);
     }
 
     /**

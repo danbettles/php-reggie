@@ -1,0 +1,7 @@
+{
+    "ignoreWords": [
+        "subpattern",
+        "subpatterns",
+        "Tostring"
+    ]
+}
