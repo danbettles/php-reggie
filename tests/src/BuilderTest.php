@@ -140,7 +140,7 @@ class BuilderTest extends TestCase
         $this->assertSame($expected, $builder->listOfAlternatives($input));
     }
 
-    public function testListofalternativesQuotesEachAlternative(): void
+    public function testListofalternativesCanQuoteEachAlternative(): void
     {
         $builderMock = $this
             ->getMockBuilder(Builder::class)

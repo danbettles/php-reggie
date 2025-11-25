@@ -26,7 +26,7 @@
     },
     "scripts": {
         "app:dev:test": "phpunit --bootstrap=vendor/autoload.php --colors=always tests/",
-        "app:dev:analyse": "phpstan analyse --level=max --ansi src/ tests/",
+        "app:dev:analyse": "phpstan analyse --level=max -v --ansi src/ tests/",
         "app:dev:lint": "phpcs",
         "app:dev:check-quality": [
             "@app:dev:test",

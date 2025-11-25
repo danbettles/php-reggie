@@ -19,6 +19,8 @@ use const true;
  *   anchorLeft: bool,
  *   anchorRight: bool,
  * }
+ *
+ * @todo Create `build(): Regex`
  */
 class Builder
 {
@@ -55,6 +57,8 @@ class Builder
 
     /**
      * Builds, and returns, the regex string
+     *
+     * @todo Rename this to "buildString"
      */
     public function toString(): string
     {
@@ -79,6 +83,7 @@ class Builder
 
     /**
      * @see self::toString()
+     * @todo Remove this.  See comment against `toString()`.
      */
     public function __toString(): string
     {
@@ -225,16 +230,18 @@ class Builder
 
     /**
      * Shortcut, adds a 'whole word' (e.g. "\bfoo\b") to the pattern being built
+     *
+     * @todo Option to quote word?
      */
     public function addWholeWord(
-        string $pattern,
+        string $word,
         bool $captureWord = false,
     ): self {
         if ($captureWord) {
-            $pattern = $this->createSubpattern($pattern, capturing: true);
+            $word = $this->createSubpattern($word, capturing: true);
         }
 
-        return $this->add(self::wrapString($pattern, '\b'));
+        return $this->add(self::wrapString($word, '\b'));
     }
 
     /**
