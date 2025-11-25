@@ -27,6 +27,8 @@ class Regex implements Stringable
     /**
      * A proxy, mainly for the purposes of testing
      *
+     * @internal
+     * @final
      * @param string[] &$matches
      */
     protected function pregMatch(
@@ -40,6 +42,8 @@ class Regex implements Stringable
     /**
      * A proxy, mainly for the purposes of testing
      *
+     * @internal
+     * @final
      * @param array<string[]> &$matches
      */
     protected function pregMatchAll(

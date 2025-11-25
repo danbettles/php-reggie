@@ -24,7 +24,6 @@ class MatchData implements ArrayAccess
     private array $matches;
 
     /**
-     * @internal
      * @phpstan-param MatchesArray $matches
      */
     public function __construct(array $matches = [])
@@ -94,7 +93,6 @@ class MatchData implements ArrayAccess
     }
 
     /**
-     * @internal
      * @phpstan-param MatchesArrayKeyType $offset
      * @phpstan-param MatchesArrayValueType $value
      * @throws InvalidArgumentException If the value is invalid
