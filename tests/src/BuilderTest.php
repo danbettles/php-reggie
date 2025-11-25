@@ -52,30 +52,11 @@ class BuilderTest extends TestCase
     }
 
     #[DataProvider('providesRegexStrings')]
-    public function testTostringReturnsARegexString(
+    public function testBuildstringReturnsARegexString(
         string $expected,
         Builder $builder,
     ): void {
-        $this->assertSame($expected, $builder->toString());
-    }
-
-    public function testMagicTostringSimplyCallsTostring(): void
-    {
-        $builderMock = $this
-            ->getMockBuilder(Builder::class)
-            ->onlyMethods(['toString'])
-            ->getMock()
-        ;
-
-        $builderMock
-            ->expects($this->once())
-            ->method('toString')
-            ->willReturn('~foo~')
-        ;
-
-        /** @var Builder $builderMock */
-
-        $this->assertSame('~foo~', (string) $builderMock);
+        $this->assertSame($expected, $builder->buildString());
     }
 
     /** @return array<mixed[]> */
@@ -102,7 +83,7 @@ class BuilderTest extends TestCase
         $builder = new Builder();
         $something = $builder->addSubpattern(...$methodArgs);
 
-        $this->assertSame($expectedRegex, $builder->toString());
+        $this->assertSame($expectedRegex, $builder->buildString());
         $this->assertSame($builder, $something);
     }
 
@@ -216,15 +197,15 @@ class BuilderTest extends TestCase
         $something = $builder->setFlags('i');
         $this->assertSame('i', $builder->getFlags());
         $this->assertSame($builder, $something);
-        $this->assertSame('~~i', $builder->toString());
+        $this->assertSame('~~i', $builder->buildString());
 
         $builder->setFlags('s');
         $this->assertSame('s', $builder->getFlags());
-        $this->assertSame('~~s', $builder->toString());
+        $this->assertSame('~~s', $builder->buildString());
 
         $builder->setFlags('');
         $this->assertSame('', $builder->getFlags());
-        $this->assertSame('~~', $builder->toString());
+        $this->assertSame('~~', $builder->buildString());
     }
 
     /** @return array<mixed[]> */
@@ -251,7 +232,7 @@ class BuilderTest extends TestCase
         $builder = new Builder();
         $something = $builder->addWholeWord(...$methodArgs);
 
-        $this->assertSame($expectedRegex, $builder->toString());
+        $this->assertSame($expectedRegex, $builder->buildString());
         $this->assertSame($builder, $something);
     }
 
@@ -287,7 +268,7 @@ class BuilderTest extends TestCase
         $builder = new Builder();
         $something = $builder->add(...$methodArgs);
 
-        $this->assertSame($expectedRegex, $builder->toString());
+        $this->assertSame($expectedRegex, $builder->buildString());
         $this->assertSame($builder, $something);
     }
 
@@ -310,7 +291,7 @@ class BuilderTest extends TestCase
 
         $something = $builderMock->add('foo.bar', quote: true);
 
-        $this->assertSame('~foo\.bar~', $builderMock->toString());
+        $this->assertSame('~foo\.bar~', $builderMock->buildString());
         $this->assertSame($builderMock, $something);
     }
 
@@ -320,12 +301,12 @@ class BuilderTest extends TestCase
         $builder->add('foo');
         $something = $builder->anchorLeft();
 
-        $this->assertSame('~^foo~', $builder->toString());
+        $this->assertSame('~^foo~', $builder->buildString());
         $this->assertSame($builder, $something);
 
         $builder->anchorLeft(false);
 
-        $this->assertSame('~foo~', $builder->toString());
+        $this->assertSame('~foo~', $builder->buildString());
     }
 
     public function testAnchorrightCausesTheRegexToBeAnchoredOnTheRightSide(): void
@@ -334,12 +315,12 @@ class BuilderTest extends TestCase
         $builder->add('foo');
         $something = $builder->anchorRight();
 
-        $this->assertSame('~foo$~', $builder->toString());
+        $this->assertSame('~foo$~', $builder->buildString());
         $this->assertSame($builder, $something);
 
         $builder->anchorRight(false);
 
-        $this->assertSame('~foo~', $builder->toString());
+        $this->assertSame('~foo~', $builder->buildString());
     }
 
     public function testAnchorbothCausesTheRegexToBeAnchoredOnBothSides(): void
@@ -348,12 +329,12 @@ class BuilderTest extends TestCase
         $builder->add('foo');
         $something = $builder->anchorBoth();
 
-        $this->assertSame('~^foo$~', $builder->toString());
+        $this->assertSame('~^foo$~', $builder->buildString());
         $this->assertSame($builder, $something);
 
         $builder->anchorBoth(false);
 
-        $this->assertSame('~foo~', $builder->toString());
+        $this->assertSame('~foo~', $builder->buildString());
     }
 
     public function testAddliteral(): void
@@ -375,7 +356,7 @@ class BuilderTest extends TestCase
 
         $something = $builderMock->addLiteral('{{ value }}');
 
-        $this->assertSame('~\{\{ value \}\}~', $builderMock->toString());
+        $this->assertSame('~\{\{ value \}\}~', $builderMock->buildString());
         $this->assertSame($builderMock, $something);
     }
 

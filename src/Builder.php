@@ -57,10 +57,8 @@ class Builder
 
     /**
      * Builds, and returns, the regex string
-     *
-     * @todo Rename this to "buildString"
      */
-    public function toString(): string
+    public function buildString(): string
     {
         $chunks = $this->chunks;
 
@@ -79,15 +77,6 @@ class Builder
             )
             . $this->options['flags']
         );
-    }
-
-    /**
-     * @see self::toString()
-     * @todo Remove this.  See comment against `toString()`.
-     */
-    public function __toString(): string
-    {
-        return $this->toString();
     }
 
     public function setFlags(string $flags): self
