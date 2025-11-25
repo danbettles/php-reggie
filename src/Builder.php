@@ -19,8 +19,6 @@ use const true;
  *   anchorLeft: bool,
  *   anchorRight: bool,
  * }
- *
- * @todo Create `build(): Regex`
  */
 class Builder
 {
@@ -77,6 +75,11 @@ class Builder
             )
             . $this->options['flags']
         );
+    }
+
+    public function build(): Regex
+    {
+        return new Regex($this->buildString());
     }
 
     public function setFlags(string $flags): self

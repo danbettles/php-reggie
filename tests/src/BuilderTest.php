@@ -3,6 +3,7 @@
 namespace DanBettles\Reggie\Tests;
 
 use DanBettles\Reggie\Builder;
+use DanBettles\Reggie\Regex;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -272,7 +273,7 @@ class BuilderTest extends TestCase
         $this->assertSame($builder, $something);
     }
 
-    public function testAddQuotesTheString(): void
+    public function testAddCanQuoteTheInput(): void
     {
         $builderMock = $this
             ->getMockBuilder(Builder::class)
@@ -534,5 +535,45 @@ class BuilderTest extends TestCase
 
         $this->assertSame($expected, $builder->getFlags());
         $this->assertSame($builder, $something);
+    }
+
+    public function testBuildReturnsARegex(): void
+    {
+        $actual = (new Builder())
+            ->caseInsensitive()
+            ->anchorBoth()
+            ->addLiteral('foo')
+            ->build()
+        ;
+
+        $this->assertInstanceOf(Regex::class, $actual);
+        $this->assertSame('~^foo$~i', (string) $actual);
+    }
+
+    public function testBuildCallsBuildstring(): void
+    {
+        $regexStr = '~^foo$~i';
+
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['buildString'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('buildString')
+            ->willReturn($regexStr)
+        ;
+
+        /** @var Builder $builderMock */
+
+        $actual = $builderMock
+            // ...
+            ->build()
+        ;
+
+        $this->assertInstanceOf(Regex::class, $actual);
+        $this->assertSame($regexStr, (string) $actual);
     }
 }
