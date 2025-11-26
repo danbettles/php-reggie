@@ -34,7 +34,7 @@ class BuilderTest extends TestCase
                     $builder = new Builder();
 
                     return $builder
-                        ->anchorLeft()
+                        ->anchorStart()
                         ->addLiteral("/path/to/symfony/project/")
                         ->addSubpattern($builder->listOfAlternatives(['vendor', 'var', 'node_modules'], quoteEach: true))
                         ->addLiteral('/')
@@ -45,7 +45,7 @@ class BuilderTest extends TestCase
                 '~\.php$~i',
                 (new Builder())
                     ->caseInsensitive()
-                    ->anchorRight()
+                    ->anchorEnd()
                     ->addLiteral('.php')
                 ,
             ],
@@ -296,30 +296,30 @@ class BuilderTest extends TestCase
         $this->assertSame($builderMock, $something);
     }
 
-    public function testAnchorleftCausesTheRegexToBeAnchoredOnTheLeftSide(): void
+    public function testAnchorstartCausesTheRegexToBeAnchoredAtTheStart(): void
     {
         $builder = new Builder();
         $builder->add('foo');
-        $something = $builder->anchorLeft();
+        $something = $builder->anchorStart();
 
         $this->assertSame('~^foo~', $builder->buildString());
         $this->assertSame($builder, $something);
 
-        $builder->anchorLeft(false);
+        $builder->anchorStart(false);
 
         $this->assertSame('~foo~', $builder->buildString());
     }
 
-    public function testAnchorrightCausesTheRegexToBeAnchoredOnTheRightSide(): void
+    public function testAnchorendCausesTheRegexToBeAnchoredAtTheEnd(): void
     {
         $builder = new Builder();
         $builder->add('foo');
-        $something = $builder->anchorRight();
+        $something = $builder->anchorEnd();
 
         $this->assertSame('~foo$~', $builder->buildString());
         $this->assertSame($builder, $something);
 
-        $builder->anchorRight(false);
+        $builder->anchorEnd(false);
 
         $this->assertSame('~foo~', $builder->buildString());
     }
@@ -336,6 +336,28 @@ class BuilderTest extends TestCase
         $builder->anchorBoth(false);
 
         $this->assertSame('~foo~', $builder->buildString());
+    }
+
+    public function testAnchoredFlagIsRemovedAndACaretIsAddedToTheStartOfThePattern(): void
+    {
+        $regexStr = (new Builder())
+            ->setFlags('A')
+            ->add('foo')
+            ->buildString()
+        ;
+
+        $this->assertSame('~^foo~', $regexStr);
+    }
+
+    public function testAnchoredendFlagIsRemovedAndADollarIsAddedToTheEndOfThePattern(): void
+    {
+        $regexStr = (new Builder())
+            ->setFlags('Z')
+            ->add('foo')
+            ->buildString()
+        ;
+
+        $this->assertSame('~foo$~', $regexStr);
     }
 
     public function testAddliteral(): void

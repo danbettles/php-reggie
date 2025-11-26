@@ -16,13 +16,15 @@ use const true;
  * @phpstan-type OptionsArray array{
  *   delimiter: string,
  *   flags: string,
- *   anchorLeft: bool,
- *   anchorRight: bool,
  * }
+ *
+ * @todo Create Flags class
  */
 class Builder
 {
     private const string FLAG_CASELESS = 'i';
+    private const string FLAG_ANCHORED = 'A';
+    private const string FLAG_ANCHORED_END = 'Z';  // Custom
 
     /**
      * @phpstan-var OptionsArray
@@ -41,13 +43,12 @@ class Builder
         return $wrapStr . $str . $wrapStr;
     }
 
+    // @todo Pass options
     public function __construct()
     {
         $this->options = [
             'delimiter' => '~',
             'flags' => '',
-            'anchorLeft' => false,
-            'anchorRight' => false,
         ];
 
         $this->chunks = [];
@@ -59,13 +60,16 @@ class Builder
     public function buildString(): string
     {
         $chunks = $this->chunks;
+        $flags = $this->options['flags'];
 
-        if ($this->options['anchorLeft']) {
+        if (str_contains($flags, self::FLAG_ANCHORED)) {
             array_unshift($chunks, '^');
+            $flags = str_replace(self::FLAG_ANCHORED, '', $flags);
         }
 
-        if ($this->options['anchorRight']) {
+        if (str_contains($flags, self::FLAG_ANCHORED_END)) {
             $chunks[] = '$';
+            $flags = str_replace(self::FLAG_ANCHORED_END, '', $flags);
         }
 
         return (
@@ -73,7 +77,7 @@ class Builder
                 implode($chunks),
                 $this->options['delimiter'],
             )
-            . $this->options['flags']
+            . $flags
         );
     }
 
@@ -94,54 +98,68 @@ class Builder
         return $this->options['flags'];
     }
 
-    public function caseSensitive(bool $flag = true): self
+    // @todo Expose this?
+    private function addFlag(string $flag): self
     {
-        if ($flag) {
-            // Make case-sensitive:
-            return $this->setFlags(str_replace(self::FLAG_CASELESS, '', $this->getFlags()));
+        if (str_contains($this->getFlags(), $flag)) {
+            return $this;
         }
 
-        // Make case-*in*sensitive:
+        return $this->setFlags($this->getFlags() . $flag);
+    }
 
-        return str_contains($this->getFlags(), self::FLAG_CASELESS)
-            ? $this  // (Already case-insensitive)
-            : $this->setFlags($this->getFlags() . self::FLAG_CASELESS)
+    // @todo Expose this?
+    private function removeFlag(string $flag): self
+    {
+        return $this->setFlags(str_replace($flag, '', $this->getFlags()));
+    }
+
+    public function caseSensitive(bool $apply = true): self
+    {
+        if ($apply) {
+            // Make case-sensitive
+            return $this->removeFlag(self::FLAG_CASELESS);
+        }
+
+        // Make case-*in*sensitive
+        return $this->addFlag(self::FLAG_CASELESS);
+    }
+
+    public function caseInsensitive(bool $apply = true): self
+    {
+        return $this->caseSensitive(!$apply);
+    }
+
+    /**
+     * Shortcut, causes the regex to be 'anchored' at the start (e.g.: "~^Start~")
+     */
+    public function anchorStart(bool $apply = true): self
+    {
+        return $apply
+            ? $this->addFlag(self::FLAG_ANCHORED)
+            : $this->removeFlag(self::FLAG_ANCHORED)
         ;
     }
 
-    public function caseInsensitive(bool $flag = true): self
+    /**
+     * Shortcut, causes the regex to be 'anchored' at the end (e.g.: "~end$~")
+     */
+    public function anchorEnd(bool $apply = true): self
     {
-        return $this->caseSensitive(!$flag);
+        return $apply
+            ? $this->addFlag(self::FLAG_ANCHORED_END)
+            : $this->removeFlag(self::FLAG_ANCHORED_END)
+        ;
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' on the left side (e.g.: "~^Left~")
+     * Shortcut, causes the regex to be 'anchored' on both sides (e.g.: "~^Start end$~")
      */
-    public function anchorLeft(bool $flag = true): self
-    {
-        $this->options['anchorLeft'] = $flag;
-
-        return $this;
-    }
-
-    /**
-     * Shortcut, causes the regex to be 'anchored' on the right side (e.g.: "~Right$~")
-     */
-    public function anchorRight(bool $flag = true): self
-    {
-        $this->options['anchorRight'] = $flag;
-
-        return $this;
-    }
-
-    /**
-     * Shortcut, causes the regex to be 'anchored' on both sides (e.g.: "~^Both$~")
-     */
-    public function anchorBoth(bool $flag = true): self
+    public function anchorBoth(bool $apply = true): self
     {
         return $this
-            ->anchorLeft($flag)
-            ->anchorRight($flag)
+            ->anchorStart($apply)
+            ->anchorEnd($apply)
         ;
     }
 
@@ -223,7 +241,7 @@ class Builder
     /**
      * Shortcut, adds a 'whole word' (e.g. "\bfoo\b") to the pattern being built
      *
-     * @todo Option to quote word?
+     * @todo Option to quote word
      */
     public function addWholeWord(
         string $word,
