@@ -19,6 +19,7 @@ use const true;
  * }
  *
  * @todo Create Flags class
+ * @todo "append" instead of "add"?
  */
 class Builder
 {
@@ -116,13 +117,12 @@ class Builder
 
     public function caseSensitive(bool $apply = true): self
     {
-        if ($apply) {
-            // Make case-sensitive
-            return $this->removeFlag(self::FLAG_CASELESS);
-        }
-
-        // Make case-*in*sensitive
-        return $this->addFlag(self::FLAG_CASELESS);
+        return $apply
+            // (Essentially) restore sensitivity
+            ? $this->removeFlag(self::FLAG_CASELESS)
+            // Make insensitive
+            : $this->addFlag(self::FLAG_CASELESS)
+        ;
     }
 
     public function caseInsensitive(bool $apply = true): self
@@ -165,6 +165,8 @@ class Builder
 
     /**
      * Quotes special regex characters
+     *
+     * @todo Create alias (`escape()`)?
      */
     public function quote(string $str): string
     {
