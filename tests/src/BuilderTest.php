@@ -78,13 +78,13 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesSubpatterns')]
     public function testAddsubpattern(
-        string $expectedRegex,
+        string $expectedRegexStr,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->addSubpattern(...$methodArgs);
 
-        $this->assertSame($expectedRegex, $builder->buildString());
+        $this->assertSame($expectedRegexStr, $builder->buildString());
         $this->assertSame($builder, $something);
     }
 
@@ -94,35 +94,42 @@ class BuilderTest extends TestCase
         return [
             [
                 'foo',
-                ['foo'],
+                [['foo']],
             ],
             [
                 'foo|bar',
-                ['foo', 'bar'],
+                [['foo', 'bar']],
             ],
             [
                 'foo|',
-                ['foo', ''],
+                [['foo', '']],
             ],
             [
                 'foo.bar|baz.qux',  // N.B. Not quoted by default
-                ['foo.bar', 'baz.qux'],
+                [['foo.bar', 'baz.qux']],
+            ],
+            [
+                'foo\.bar|baz\.qux',
+                [['foo.bar', 'baz.qux'], 'quoteEach' => true],
             ],
         ];
     }
 
-    /** @param string[] $input */
+    /** @param array{0:string[],quoteEach?:bool} $methodArgs */
     #[DataProvider('providesListsOfAlternatives')]
     public function testListofalternativesCreatesAListOfAlternatives(
         string $expected,
-        array $input,
+        array $methodArgs,
     ): void {
         $builder = new Builder();
 
-        $this->assertSame($expected, $builder->listOfAlternatives($input));
+        $this->assertSame(
+            $expected,
+            $builder->listOfAlternatives(...$methodArgs),
+        );
     }
 
-    public function testListofalternativesCanQuoteEachAlternative(): void
+    public function testListofalternativesCallsQuoteWhenQuoting(): void
     {
         $builderMock = $this
             ->getMockBuilder(Builder::class)
@@ -219,7 +226,15 @@ class BuilderTest extends TestCase
             ],
             [
                 '~\b(foo)\b~',
-                ['foo', 'captureWord' => true],
+                ['foo', 'capture' => true],
+            ],
+            [
+                '~\b\.php\b~',
+                ['.php', 'quote' => true],
+            ],
+            [
+                '~\b(\.php)\b~',
+                ['.php', 'capture' => true, 'quote' => true],
             ],
         ];
     }
@@ -227,14 +242,39 @@ class BuilderTest extends TestCase
     /** @param string[] $methodArgs */
     #[DataProvider('providesWholeWordPatterns')]
     public function testAddwholeword(
-        string $expectedRegex,
+        string $expectedRegexStr,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->addWholeWord(...$methodArgs);
 
-        $this->assertSame($expectedRegex, $builder->buildString());
+        $this->assertSame($expectedRegexStr, $builder->buildString());
         $this->assertSame($builder, $something);
+    }
+
+    public function testAddwholewordCallsQuoteWhenQuoting(): void
+    {
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['quote'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('quote')
+            ->with('.php')
+            ->willReturn('\.php')
+        ;
+
+        /** @var Builder $builderMock */
+
+        $regexStr = $builderMock
+            ->addWholeWord('.php', quote: true)
+            ->buildString()
+        ;
+
+        $this->assertSame('~\b\.php\b~', $regexStr);
     }
 
     public function testBackslash(): void
@@ -257,23 +297,27 @@ class BuilderTest extends TestCase
                 '~foo~',
                 ['foo'],
             ],
+            [
+                '~\.php~',
+                ['.php', 'quote' => true],
+            ],
         ];
     }
 
     /** @param string[] $methodArgs */
     #[DataProvider('providesChunks')]
     public function testAddAddsAnyKindOfChunk(
-        string $expectedRegex,
+        string $expectedRegexStr,
         array $methodArgs,
     ): void {
         $builder = new Builder();
         $something = $builder->add(...$methodArgs);
 
-        $this->assertSame($expectedRegex, $builder->buildString());
+        $this->assertSame($expectedRegexStr, $builder->buildString());
         $this->assertSame($builder, $something);
     }
 
-    public function testAddCanQuoteTheInput(): void
+    public function testAddCallsQuoteWhenQuoting(): void
     {
         $builderMock = $this
             ->getMockBuilder(Builder::class)
@@ -290,10 +334,12 @@ class BuilderTest extends TestCase
 
         /** @var Builder $builderMock */
 
-        $something = $builderMock->add('foo.bar', quote: true);
+        $regexStr = $builderMock
+            ->add('foo.bar', quote: true)
+            ->buildString()
+        ;
 
-        $this->assertSame('~foo\.bar~', $builderMock->buildString());
-        $this->assertSame($builderMock, $something);
+        $this->assertSame('~foo\.bar~', $regexStr);
     }
 
     public function testAnchorstartCausesTheRegexToBeAnchoredAtTheStart(): void

@@ -131,7 +131,7 @@ class Builder
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' at the start (e.g.: "~^Start~")
+     * Shortcut, causes the regex to be 'anchored' at the start.  E.g.: "~^Start~".
      */
     public function anchorStart(bool $apply = true): self
     {
@@ -142,7 +142,7 @@ class Builder
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' at the end (e.g.: "~end$~")
+     * Shortcut, causes the regex to be 'anchored' at the end.  E.g.: "~end$~".
      */
     public function anchorEnd(bool $apply = true): self
     {
@@ -153,7 +153,7 @@ class Builder
     }
 
     /**
-     * Shortcut, causes the regex to be 'anchored' on both sides (e.g.: "~^Start end$~")
+     * Shortcut, causes the regex to be 'anchored' on both sides.  E.g.: "~^Start end$~".
      */
     public function anchorBoth(bool $apply = true): self
     {
@@ -188,7 +188,7 @@ class Builder
     }
 
     /**
-     * Creates, and returns, a list of alternatives (e.g. "foo|bar")
+     * Creates, and returns, a list of alternatives.  E.g. "foo|bar".
      *
      * @param string[] $patterns
      */
@@ -229,7 +229,7 @@ class Builder
     }
 
     /**
-     * Adds a subpattern (e.g. "(foo)") to the pattern being built
+     * Adds a subpattern to the pattern being built.  E.g. "(foo)".
      */
     public function addSubpattern(
         string $pattern,
@@ -239,19 +239,25 @@ class Builder
     }
 
     /**
-     * Shortcut, adds a 'whole word' (e.g. "\bfoo\b") to the pattern being built
+     * Shortcut, adds a 'whole word' to the pattern being built.  E.g.: "\bfoo\b".
      *
-     * @todo Option to quote word
+     * N.B. The input needn't be a single word: we're simply talking about dropping a word boundary on each side of the
+     * string.
      */
     public function addWholeWord(
-        string $word,
-        bool $captureWord = false,
+        string $str,
+        bool $capture = false,
+        bool $quote = false,
     ): self {
-        if ($captureWord) {
-            $word = $this->createSubpattern($word, capturing: true);
+        if ($quote) {
+            $str = $this->quote($str);
         }
 
-        return $this->add(self::wrapString($word, '\b'));
+        if ($capture) {
+            $str = $this->createSubpattern($str, capturing: true);
+        }
+
+        return $this->add(self::wrapString($str, '\b'));
     }
 
     /**
