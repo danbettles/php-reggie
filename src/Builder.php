@@ -19,13 +19,13 @@ use const true;
  * }
  *
  * @todo Create Flags class
- * @todo "append" instead of "add"?
  */
 class Builder
 {
     private const string FLAG_CASELESS = 'i';
     private const string FLAG_ANCHORED = 'A';
     private const string FLAG_ANCHORED_END = 'Z';  // Custom
+    private const string FLAG_UTF8 = 'u';
 
     /**
      * @phpstan-var OptionsArray
@@ -99,8 +99,11 @@ class Builder
         return $this->options['flags'];
     }
 
-    // @todo Expose this?
-    private function addFlag(string $flag): self
+    /**
+     * @todo Accept a single character only
+     * @todo Validate the flag?
+     */
+    public function addFlag(string $flag): self
     {
         if (str_contains($this->getFlags(), $flag)) {
             return $this;
@@ -109,8 +112,11 @@ class Builder
         return $this->setFlags($this->getFlags() . $flag);
     }
 
-    // @todo Expose this?
-    private function removeFlag(string $flag): self
+    /**
+     * @todo Accept a single character only
+     * @todo Validate the flag?
+     */
+    public function removeFlag(string $flag): self
     {
         return $this->setFlags(str_replace($flag, '', $this->getFlags()));
     }
@@ -163,10 +169,16 @@ class Builder
         ;
     }
 
+    public function utf8(bool $apply = true): self
+    {
+        return $apply
+            ? $this->addFlag(self::FLAG_UTF8)
+            : $this->removeFlag(self::FLAG_UTF8)
+        ;
+    }
+
     /**
      * Quotes special regex characters
-     *
-     * @todo Create alias (`escape()`)?
      */
     public function quote(string $str): string
     {

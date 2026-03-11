@@ -644,4 +644,146 @@ class BuilderTest extends TestCase
         $this->assertInstanceOf(Regex::class, $actual);
         $this->assertSame($regexStr, (string) $actual);
     }
+
+    /** @return array<mixed[]> */
+    public static function providesFlagsToAdd(): array
+    {
+        return [
+            [
+                '',
+                '',
+                '',
+            ],
+            [
+                'u',  // (Appended)
+                'u',
+                '',
+            ],
+            [
+                'u',  // (No change)
+                'u',
+                'u',
+            ],
+            [
+                'smu',  // (Appended)
+                'u',
+                'sm',
+            ],
+            [
+                'sum',  // (No change)
+                'u',
+                'sum',
+            ],
+        ];
+    }
+
+    #[DataProvider('providesFlagsToAdd')]
+    public function testAddflag(
+        string $expectedFlags,
+        string $flag,
+        string $initialFlags,
+    ): void {
+        $builder = new Builder();
+        $builder->setFlags($initialFlags);
+        $something = $builder->addFlag($flag);
+
+        $this->assertSame($expectedFlags, $builder->getFlags());
+        $this->assertSame($builder, $something);
+    }
+
+    /** @return array<mixed[]> */
+    public static function providesFlagsToRemove(): array
+    {
+        return [
+            [
+                '',
+                '',
+                '',
+            ],
+            [
+                '',  // (No change)
+                'u',
+                '',
+            ],
+            [
+                '',  // (Removed)
+                'u',
+                'u',
+            ],
+            [
+                'sm',  // (Removed)
+                'u',
+                'sum',
+            ],
+        ];
+    }
+
+    #[DataProvider('providesFlagsToRemove')]
+    public function testRemoveflag(
+        string $expectedFlags,
+        string $flag,
+        string $initialFlags,
+    ): void {
+        $builder = new Builder();
+        $builder->setFlags($initialFlags);
+        $something = $builder->removeFlag($flag);
+
+        $this->assertSame($expectedFlags, $builder->getFlags());
+        $this->assertSame($builder, $something);
+    }
+
+    public function testUtf8SwitchesUtf8Mode(): void
+    {
+        $builder = new Builder();
+
+        $this->assertSame('', $builder->getFlags());
+
+        $builder->utf8();
+
+        $this->assertSame('u', $builder->getFlags());
+
+        $builder->utf8(apply: false);
+
+        $this->assertSame('', $builder->getFlags());
+    }
+
+    public function testUtf8UsesAddflag(): void
+    {
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['addFlag'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('addFlag')
+            ->with('u')
+            ->willReturnSelf()
+        ;
+
+        /** @var Builder $builderMock */
+
+        $builderMock->utf8();
+    }
+
+    public function testUtf8UsesRemoveflag(): void
+    {
+        $builderMock = $this
+            ->getMockBuilder(Builder::class)
+            ->onlyMethods(['removeFlag'])
+            ->getMock()
+        ;
+
+        $builderMock
+            ->expects($this->once())
+            ->method('removeFlag')
+            ->with('u')
+            ->willReturnSelf()
+        ;
+
+        /** @var Builder $builderMock */
+
+        $builderMock->utf8(apply: false);
+    }
 }
